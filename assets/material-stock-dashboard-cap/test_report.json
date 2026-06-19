@@ -1,0 +1,52 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "score": 100,
+    "coverage": 25.26
+  },
+  "sections": [
+    {
+      "name": "CAP Tests",
+      "marker": "cap_tests",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "score": 100,
+      "tests": [
+        {
+          "name": "StockService — classification logic should return both sufficient and at-risk materials",
+          "outcome": "passed",
+          "duration": 0.01
+        },
+        {
+          "name": "StockService — classification logic should classify material with stock well above thresholds as SUFFICIENT",
+          "outcome": "passed",
+          "duration": 0.003
+        },
+        {
+          "name": "StockService — classification logic should classify material below reorder point as NEARLY_OUT_OF_STOCK with REORDER_POINT_BREACH",
+          "outcome": "passed",
+          "duration": 0.002
+        },
+        {
+          "name": "StockService — classification logic should classify material below safety stock % as NEARLY_OUT_OF_STOCK with SAFETY_STOCK_PCT_BREACH",
+          "outcome": "passed",
+          "duration": 0.002
+        },
+        {
+          "name": "StockService — classification logic should classify material breaching both conditions as NEARLY_OUT_OF_STOCK with BOTH",
+          "outcome": "passed",
+          "duration": 0.002
+        },
+        {
+          "name": "StockService — classification logic should store and retrieve StockThresholdConfig",
+          "outcome": "passed",
+          "duration": 0.004
+        }
+      ]
+    }
+  ]
+}
