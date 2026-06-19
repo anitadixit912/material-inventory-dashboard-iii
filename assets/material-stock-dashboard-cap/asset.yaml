@@ -1,0 +1,71 @@
+apiVersion: asset.sap/v1
+kind: Asset
+
+metadata:
+  name: material-stock-dashboard-cap
+  version: 2.0.0
+  description: "CAP BTP Extension — Material Stock Level Monitoring Dashboard with React UI (SAP UI5 Web Components), OData v4 stock service, and AI chatbox powered by nli-stockadv-agent."
+
+type: cap-app
+
+provides:
+  protocols: [odata-v4, rest]
+
+deployTarget:
+  type: cf
+  url: "https://material-stock-dashboard-cap.cfapps.us10.hana.ondemand.com"
+
+components:
+  - name: srv
+    type: srv
+    buildPath: .
+    outputPath: gen/srv
+    env:
+      - name: AGENT_SERVICE_URL
+        value: "https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com"
+    provides:
+      endpoints:
+        - path: /stock
+          port: 4004
+          protocol: http
+      protocols: [odata-v4, rest]
+    port: 4004
+
+design:
+  summary: >
+    The Material Stock Dashboard is the user-facing frontend of the Material Stock Intelligence Platform.
+    It provides a React UI (SAP UI5 Web Components) with a stock table and AI chatbox.
+    The CAP Node.js backend serves live OData v4 stock data from SAP S/4HANA Cloud via BTP Destination Service,
+    and forwards chat messages to nli-stockadv-agent via A2A protocol.
+    Deployed on SAP BTP Cloud Foundry (us10). Protected by XSUAA (OAuth 2.0).
+  architecture:
+    components:
+      - name: material-stock-dashboard-cap
+        type: cap-nodejs
+        runtime: "SAP BTP Cloud Foundry (us10)"
+        url: "https://material-stock-dashboard-cap.cfapps.us10.hana.ondemand.com"
+        healthEndpoint: "/stock"
+      - name: nli-stockadv-agent
+        type: downstream-agent
+        relationship: "CAP /stock/chat POSTs user messages to agent via A2A"
+        url: "https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com"
+      - name: SAP S/4HANA Cloud Public Edition
+        type: backend
+        api: "API_MATERIAL_STOCK_SRV:v1"
+        endpoint: "/odata/v4/stock/MaterialStockView"
+      - name: proj-vector-destination-service
+        type: btp-service
+        purpose: "S/4HANA OData connectivity with OAuth 2.0"
+      - name: material-stock-dashboard-xsuaa
+        type: btp-service
+        purpose: "User authentication (OAuth 2.0 / OIDC)"
+  endpoints:
+    - path: /stock/MaterialStockView
+      protocol: odata-v4
+      description: "Live material stock entity set — unrestricted, reserved, in-transit, safety stock per material/plant/sloc"
+    - path: /stock/$metadata
+      protocol: odata-v4
+      description: "OData service metadata document"
+    - path: /stock/chat
+      protocol: rest
+      description: "AI chatbox action — forwards user message to nli-stockadv-agent via A2A and streams response"
