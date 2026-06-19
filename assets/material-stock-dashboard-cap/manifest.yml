@@ -1,0 +1,28 @@
+---
+# CF manifest for material-stock-dashboard-cap.
+# Subaccount: GDH-PRJ-Vector-Hackathon-APAC-Dev1
+# Org: GDH-PRJ-Vector-Hackathon_gdh-prj-vector-hackathon-apac-dev1-5ms3qdnd | Space: Dev
+# API: https://api.cf.us10.hana.ondemand.com
+# Deploys from the CDS production build output in gen/srv/.
+# Run `npm run build:all` before cf push to regenerate gen/srv/.
+applications:
+  - name: material-stock-dashboard-cap
+    path: gen/srv
+    memory: 512M
+    disk_quota: 2G
+    instances: 1
+    buildpacks:
+      - nodejs_buildpack
+    command: npm start
+    timeout: 180
+    health-check-type: http
+    health-check-http-endpoint: /stock
+    services:
+      - proj-vector-destination-service
+      - material-stock-dashboard-xsuaa
+    env:
+      NODE_ENV: production
+      CDS_ENV: production
+      # Set to the deployed CF URL of nli-stockadv-agent
+      AGENT_SERVICE_URL: https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com
+      LOG_LEVEL: info
