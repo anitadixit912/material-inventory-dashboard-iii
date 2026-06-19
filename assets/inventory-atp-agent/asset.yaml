@@ -1,0 +1,149 @@
+apiVersion: asset.sap/v1
+kind: Asset
+
+metadata:
+  name: inventory-atp-agent
+  version: 1.0.0
+  description: "AI agent that analyzes inventory availability, explains stock drops, checks order feasibility via ATP, simulates corrective options, and executes approved supply chain actions against SAP S/4HANA Cloud."
+
+type: agent
+
+deployTarget:
+  type: cf
+  url: "https://inventory-atp-agent.cfapps.us10.hana.ondemand.com"
+
+agentCard:
+  version: 1.0.0
+
+design:
+  summary: >
+    The Inventory ATP Agentic Copilot provides deep ATP analysis and supply chain execution for the Material Stock Intelligence Platform.
+    It exposes 10 tools across 5 sub-intents: Explain_Stock_Drop, Check_Order_Feasibility, Protect_Service_Level, Simulate_Options, and Execute_With_Approval.
+    Write tools (create_stock_transport_order, convert_planned_order, adjust_pir, flag_po_expedite) are approval-gated and require explicit user confirmation before execution.
+    Role-based tool access is enforced: PLANNER (all tools), SALES_OPS (read + ATP), CUSTOMER_SERVICE (read + ATP), PROCUREMENT_MANAGER (expedite + demand).
+    The agent is deployed on SAP BTP Cloud Foundry (us10) and integrates with SAP S/4HANA Cloud Public Edition via BTP Destination Service.
+  architecture:
+    components:
+      - name: inventory-atp-agent
+        type: python-agent
+        runtime: "SAP BTP Cloud Foundry (us10)"
+        url: "https://inventory-atp-agent.cfapps.us10.hana.ondemand.com"
+        framework: "LangGraph + gunicorn (uvicorn worker)"
+        healthEndpoint: "/.well-known/agent.json"
+      - name: SAP S/4HANA Cloud Public Edition
+        type: backend
+        apis:
+          - "API_MATERIAL_STOCK_SRV:v1 — Material Stock Read"
+          - "API_MRP_MATERIALS_SRV_01:v1 — Material Planning / MRP"
+          - "CE_APIAVAILTOPROMISECHECK_0001:v1 — Advanced ATP Check"
+          - "API_PLANNED_ORDERS:v1 — Planned Orders"
+          - "API_PLND_INDEP_RQMT_SRV:v1 — Planned Independent Requirements"
+          - "CE_STOCKTRANSPORTORDER_0001:v1 — Stock Transport Order"
+      - name: proj-vector-destination-service
+        type: btp-service
+        purpose: "S/4HANA OData connectivity with OAuth 2.0"
+  tools:
+    readTools:
+      - name: get_material_stock
+        description: "Fetch real-time stock by material and plant from API_MATERIAL_STOCK_SRV"
+        milestone: "M1 — Signal Perception"
+      - name: get_demand_elements
+        description: "Fetch supply/demand items and MRP parameters from API_MRP_MATERIALS_SRV_01"
+        milestone: "M1 — Signal Perception"
+      - name: run_atp_check
+        description: "Check order feasibility via CE_APIAVAILTOPROMISECHECK_0001 (non-reserving ATP)"
+        milestone: "M3 — ATP Feasibility"
+      - name: get_planned_orders
+        description: "List open planned orders eligible for conversion from API_PLANNED_ORDERS"
+      - name: propose_corrective_actions
+        description: "Rank up to 4 corrective options (convert PO, STO, PIR reduction, partial fill)"
+        milestone: "M4 — Options Simulated"
+      - name: watchlist_monitor
+        description: "Detect safety-stock breaches across a watchlist of material/plant pairs"
+    writeTools:
+      - name: create_stock_transport_order
+        description: "Create inter-plant STO via CE_STOCKTRANSPORTORDER_0001 (approval required)"
+        approvalRequired: true
+        milestone: "M5 — Approved Execution"
+      - name: convert_planned_order
+        description: "Convert planned order to production/process order via API_PLANNED_ORDERS (approval required)"
+        approvalRequired: true
+        milestone: "M5 — Approved Execution"
+      - name: adjust_pir
+        description: "Reduce planned independent requirement quantity via API_PLND_INDEP_RQMT_SRV (approval required)"
+        approvalRequired: true
+        milestone: "M5 — Approved Execution"
+      - name: flag_po_expedite
+        description: "Flag purchase order for expedite action with buyer note (approval required)"
+        approvalRequired: true
+        milestone: "M5 — Approved Execution"
+  rolePolicy:
+    - role: PLANNER
+      allowedTools: all
+    - role: SALES_OPS
+      allowedTools: ["get_material_stock", "run_atp_check", "propose_corrective_actions"]
+    - role: CUSTOMER_SERVICE
+      allowedTools: ["get_material_stock", "run_atp_check"]
+    - role: PROCUREMENT_MANAGER
+      allowedTools: ["flag_po_expedite", "get_demand_elements", "get_planned_orders"]
+  observabilityMilestones:
+    - id: M1
+      name: "Signal Perception"
+      logPattern: "M1.achieved: stock_perception_complete"
+      tools: ["get_material_stock", "get_demand_elements"]
+    - id: M2
+      name: "Root-Cause Analysis"
+      logPattern: "M2.achieved: root_cause_identified"
+      tools: ["_run_agent()"]
+    - id: M3
+      name: "ATP Feasibility Check"
+      logPattern: "M3.achieved: atp_check_complete"
+      tools: ["run_atp_check"]
+    - id: M4
+      name: "Options Simulated"
+      logPattern: "M4.achieved: options_simulated"
+      tools: ["propose_corrective_actions"]
+    - id: M5
+      name: "Approved Execution"
+      logPattern: "M5.achieved: execution_complete"
+      tools: ["create_stock_transport_order", "convert_planned_order", "adjust_pir", "flag_po_expedite"]
+
+mcpServers:
+  - name: "API_MATERIAL_STOCK_SRV"
+    ordId: "sap.s4:apiResource:API_MATERIAL_STOCK_SRV:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/material-stock-read/api-spec.edmx"
+    status: staged
+    translationJson: pending
+    note: "generate_mcp_translation returns HTTP 404 in this environment; re-run when platform endpoint becomes available"
+  - name: "API_MRP_MATERIALS_SRV_01"
+    ordId: "sap.s4:apiResource:API_MRP_MATERIALS_SRV_01:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/material-planning-data-mrp/api-spec.edmx"
+    status: staged
+    translationJson: pending
+  - name: "CE_APIAVAILTOPROMISECHECK_0001"
+    ordId: "sap.s4:apiResource:CE_APIAVAILTOPROMISECHECK_0001:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/advanced-atp-check/api-spec.edmx"
+    status: staged
+    translationJson: pending
+  - name: "API_PLANNED_ORDERS"
+    ordId: "sap.s4:apiResource:API_PLANNED_ORDERS:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/planned-orders/api-spec.edmx"
+    status: staged
+    translationJson: pending
+  - name: "API_PLND_INDEP_RQMT_SRV"
+    ordId: "sap.s4:apiResource:API_PLND_INDEP_RQMT_SRV:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/planned-independent-requirements/api-spec.edmx"
+    status: staged
+    translationJson: pending
+  - name: "CE_STOCKTRANSPORTORDER_0001"
+    ordId: "sap.s4:apiResource:CE_STOCKTRANSPORTORDER_0001:v1"
+    apiType: edmx
+    specFile: "specification/inventory-atp-agent/mcps/stock-transport-order/api-spec.edmx"
+    status: staged
+    translationJson: pending
+    note: "Original spec expired; re-fetch from SAP Business Accelerator Hub before generating translation.json"
