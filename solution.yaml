@@ -1,0 +1,82 @@
+apiVersion: solution.sap/v1
+kind: Solution
+
+metadata:
+  name: material-stock-dashboard-890c0
+  version: 1.7.0
+  description: "Dashboard showing materials with sufficient stock and nearly out-of-stock materials with storage location, sourced from SAP S/4HANA Cloud Public Edition."
+
+design:
+  summary: >
+    The Material Stock Intelligence Platform is a BTP-hosted solution that gives warehouse managers,
+    supply chain planners, and procurement officers a real-time view of inventory health and an AI-powered
+    assistant to diagnose stock issues, check order feasibility, simulate corrective options, and execute
+    approved supply chain actions against SAP S/4HANA Cloud Public Edition.
+    All 3 assets are deployed on SAP BTP Cloud Foundry (us10).
+  architecture:
+    deploymentTarget: "SAP BTP Cloud Foundry (us10)"
+    region: us10
+    components:
+      - name: material-stock-dashboard-cap
+        role: "Frontend dashboard (React UI + CAP OData backend)"
+        url: "https://material-stock-dashboard-cap.cfapps.us10.hana.ondemand.com"
+        healthCheck: "/stock → HTTP 200 ✅"
+      - name: nli-stockadv-agent
+        role: "NLI Stock Advisor — conversational AI entry point"
+        url: "https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com"
+        healthCheck: "/.well-known/agent.json → HTTP 200 ✅"
+      - name: inventory-atp-agent
+        role: "ATP Agentic Copilot — deep stock analysis and S/4HANA write-back"
+        url: "https://inventory-atp-agent.cfapps.us10.hana.ondemand.com"
+        healthCheck: "/.well-known/agent.json → HTTP 200 ✅"
+    dataFlow:
+      - step: 1
+        description: "User asks stock question in React chatbox"
+        from: "Browser"
+        to: "material-stock-dashboard-cap /stock/chat"
+      - step: 2
+        description: "CAP forwards message via A2A to NLI agent"
+        from: "material-stock-dashboard-cap"
+        to: "nli-stockadv-agent"
+      - step: 3
+        description: "NLI agent reads live stock data via OData"
+        from: "nli-stockadv-agent"
+        to: "material-stock-dashboard-cap /stock/MaterialStockView"
+      - step: 4
+        description: "NLI agent delegates deep ATP analysis via A2A"
+        from: "nli-stockadv-agent"
+        to: "inventory-atp-agent"
+      - step: 5
+        description: "ATP agent calls S/4HANA APIs via BTP Destination Service"
+        from: "inventory-atp-agent"
+        to: "SAP S/4HANA Cloud Public Edition"
+  mcpIntegration:
+    status: "EDMX specs staged — translation.json pending platform availability"
+    totalApis: 6
+    stagedEDMX: 6
+    translationJsonGenerated: 0
+    note: "generate_mcp_translation platform endpoint returns HTTP 404 in this environment. Re-run mcp-translation-file skill per EDMX when endpoint becomes available."
+    apis:
+      - ordId: "sap.s4:apiResource:API_MATERIAL_STOCK_SRV:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+      - ordId: "sap.s4:apiResource:API_MRP_MATERIALS_SRV_01:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+      - ordId: "sap.s4:apiResource:CE_APIAVAILTOPROMISECHECK_0001:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+      - ordId: "sap.s4:apiResource:API_PLANNED_ORDERS:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+      - ordId: "sap.s4:apiResource:API_PLND_INDEP_RQMT_SRV:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+      - ordId: "sap.s4:apiResource:CE_STOCKTRANSPORTORDER_0001:v1"
+        edmx: "✅ staged"
+        translationJson: "⏳ pending"
+
+assets:
+  - ref: ./assets/material-stock-dashboard-cap/asset.yaml
+  - ref: ./assets/nli-stockadv-agent/asset.yaml
+  - ref: ./assets/inventory-atp-agent/asset.yaml
