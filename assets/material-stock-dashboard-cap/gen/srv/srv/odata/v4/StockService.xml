@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
+    <edmx:Include Alias="Capabilities" Namespace="Org.OData.Capabilities.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="StockService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <Annotation Term="Core.Links">
+        <Collection>
+          <Record>
+            <PropertyValue Property="rel" String="author"/>
+            <PropertyValue Property="href" String="https://cap.cloud.sap"/>
+          </Record>
+        </Collection>
+      </Annotation>
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="MaterialStockView" EntityType="StockService.MaterialStockView"/>
+        <EntitySet Name="StockThresholdConfig" EntityType="StockService.StockThresholdConfig"/>
+        <ActionImport Name="updateThreshold" Action="StockService.updateThreshold"/>
+        <ActionImport Name="chat" Action="StockService.chat"/>
+      </EntityContainer>
+      <EntityType Name="MaterialStockView">
+        <Key>
+          <PropertyRef Name="Material"/>
+          <PropertyRef Name="Plant"/>
+          <PropertyRef Name="StorageLocation"/>
+        </Key>
+        <Property Name="Material" Type="Edm.String" MaxLength="40" Nullable="false"/>
+        <Property Name="Plant" Type="Edm.String" MaxLength="4" Nullable="false"/>
+        <Property Name="StorageLocation" Type="Edm.String" MaxLength="4" Nullable="false"/>
+        <Property Name="MaterialDescription" Type="Edm.String" MaxLength="100"/>
+        <Property Name="StockQuantity" Type="Edm.Decimal" Precision="13" Scale="3"/>
+        <Property Name="BaseUnit" Type="Edm.String" MaxLength="3"/>
+        <Property Name="ReorderPoint" Type="Edm.Decimal" Precision="13" Scale="3"/>
+        <Property Name="SafetyStock" Type="Edm.Decimal" Precision="13" Scale="3"/>
+        <Property Name="StockStatus" Type="Edm.String" MaxLength="30"/>
+        <Property Name="RiskReason" Type="Edm.String" MaxLength="60"/>
+        <Property Name="RiskDescription" Type="Edm.String" MaxLength="500"/>
+      </EntityType>
+      <EntityType Name="StockThresholdConfig">
+        <Key>
+          <PropertyRef Name="id"/>
+        </Key>
+        <Property Name="id" Type="Edm.Int32" Nullable="false" DefaultValue="1"/>
+        <Property Name="safetyStockPct" Type="Edm.Decimal" Precision="5" Scale="2" DefaultValue="20"/>
+      </EntityType>
+      <Action Name="updateThreshold" IsBound="false">
+        <Parameter Name="safetyStockPct" Type="Edm.Decimal" Precision="5" Scale="2" Nullable="false"/>
+        <ReturnType Type="Edm.Decimal" Precision="5" Scale="2"/>
+      </Action>
+      <Action Name="chat" IsBound="false">
+        <Parameter Name="message" Type="Edm.String" MaxLength="1000" Nullable="false"/>
+        <Parameter Name="contextId" Type="Edm.String" MaxLength="100"/>
+        <ReturnType Type="Edm.String"/>
+      </Action>
+      <Annotations Target="StockService.EntityContainer/MaterialStockView">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="StockService.EntityContainer/StockThresholdConfig">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
