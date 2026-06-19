@@ -1,0 +1,59 @@
+/* ── Dashboard Root ────────────────────────────────────────────── */
+.dashboard-root {
+  padding: 1.5rem;
+  background: var(--sapBackgroundColor, #f5f5f5);
+  min-height: calc(100vh - 44px);
+  box-sizing: border-box;
+}
+
+/* ── Filter Card ───────────────────────────────────────────────── */
+.filter-card {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+}
+
+/* ── KPI Row ───────────────────────────────────────────────────── */
+.kpi-row {
+  margin-bottom: 1.25rem;
+}
+
+.kpi-card {
+  flex: 1 1 160px;
+  min-width: 140px;
+  max-width: 220px;
+  border-radius: 8px;
+  border-top: 4px solid transparent;
+}
+
+.kpi-sufficient { border-top-color: var(--sapPositiveColor, #107e3e); }
+.kpi-atrisk     { border-top-color: var(--sapCriticalColor, #e9730c); }
+.kpi-total      { border-top-color: var(--sapNeutralBorderColor, #8c8c8c); }
+
+/* ── Chatbox Section ───────────────────────────────────────────── */
+.chatbox-section {
+  margin-top: 2rem;
+  max-width: 720px;
+}
+
+/* ── Panels Row ────────────────────────────────────────────────── */
+.panels-row {
+  align-items: flex-start;
+}
+
+.panel {
+  flex: 1 1 480px;
+  min-width: 320px;
+  background: var(--sapBaseColor, #ffffff);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: var(--sapContent_Shadow0, 0 1px 4px rgba(0,0,0,.1));
+  border-top: 4px solid transparent;
+}
+
+.panel-sufficient {
+  border-top-color: var(--sapPositiveColor, #107e3e);
+}
+
+.panel-atrisk {
+  border-top-color: var(--sapCriticalColor, #e9730c);
+}
