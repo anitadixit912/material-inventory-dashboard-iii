@@ -1,0 +1,60 @@
+apiVersion: asset.sap/v1
+kind: Asset
+
+metadata:
+  name: nli-stockadv-agent
+  version: 2.0.0
+  description: "Natural Language Interface Stock Advisor — conversational AI agent for material stock queries, at-risk material identification, replenishment recommendations, and email alerts."
+
+type: agent
+
+deployTarget:
+  type: cf
+  url: "https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com"
+
+agentCard:
+  version: 1.1.0
+
+design:
+  summary: >
+    The NLI Stock Advisor is the primary conversational entry point for all user stock queries from the React chatbox in the Material Stock Dashboard.
+    It connects to the CAP OData backend for live stock data and forwards deep ATP analysis requests to the inventory-atp-agent.
+    Deployed on SAP BTP Cloud Foundry (us10). LLM: gpt-4o via SAP AI Core (BTP Destination Service).
+  architecture:
+    components:
+      - name: nli-stockadv-agent
+        type: python-agent
+        runtime: "SAP BTP Cloud Foundry (us10)"
+        url: "https://nli-stockadv-agent.cfapps.us10.hana.ondemand.com"
+        framework: "LangGraph + gunicorn (uvicorn worker)"
+        healthEndpoint: "/.well-known/agent.json"
+      - name: material-stock-dashboard-cap
+        type: upstream
+        relationship: "CAP OData source — agent reads /stock/MaterialStockView"
+        url: "https://material-stock-dashboard-cap.cfapps.us10.hana.ondemand.com"
+      - name: inventory-atp-agent
+        type: downstream
+        relationship: "A2A delegation for deep ATP analysis"
+        url: "https://inventory-atp-agent.cfapps.us10.hana.ondemand.com"
+      - name: proj-vector-destination-service
+        type: btp-service
+        purpose: "SAP AI Core LLM connectivity via BTP Destination"
+  tools:
+    - name: get_material_stock
+      description: "Fetch stock for specific material number(s) from CAP /stock/MaterialStockView. Trigger: any MAT-XXXX pattern in query."
+    - name: get_atrisk_materials
+      description: "List all materials with NEARLY_OUT_OF_STOCK status. Trigger: general at-risk queries without a specific material number."
+    - name: get_sufficient_materials
+      description: "List all materials with SUFFICIENT stock status."
+    - name: get_stock_summary
+      description: "Compute overall stock health summary: total, sufficient, at-risk, breach counts."
+    - name: get_critical_materials_by_plant
+      description: "List at-risk materials filtered by plant. Trigger: 'at-risk in plant XXXX'."
+    - name: send_email
+      description: "Send email notification with stock data. Trigger: 'send email to X about MAT-Y'. Always calls get_material_stock first."
+  llm:
+    model: "gpt-4o"
+    temperature: 0.0
+    provider: "SAP AI Core"
+    destinationName: "aicore"
+    note: "sap/anthropic--claude-4.5-sonnet not available in AI Core resource group; overridden to gpt-4o"
