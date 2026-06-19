@@ -1,0 +1,120 @@
+{
+  "servers": {
+    "API_MATERIAL_STOCK_SRV": {
+      "tools": {
+        "API_MATERIAL_STOCK_SRV__A_MaterialStock_Read": {
+          "description": "Read material stock quantities by material and plant.",
+          "input_schema": {
+            "properties": {
+              "Material": { "type": "string", "description": "Material number" },
+              "Plant": { "type": "string", "description": "Plant code" },
+              "$top": { "type": "string", "description": "Max rows" }
+            },
+            "required": ["Material", "Plant"]
+          },
+          "mock_response": {
+            "value": [{
+              "Material": "FG-001", "Plant": "1010", "StorageLocation": "0001",
+              "MatlWrhsStkQtyInMatlBaseUnit": 120.0, "MaterialStockInTransferQty": 0.0,
+              "MatlStkQtyInMatlBaseUnit": 10.0, "SafetyStock": 50.0, "MaterialBaseUnit": "EA"
+            }]
+          }
+        }
+      }
+    },
+    "API_MRP_MATERIALS_SRV_01": {
+      "tools": {
+        "API_MRP_MATERIALS_SRV_01__SupplyDemandItems_Read": {
+          "description": "Read MRP supply/demand items.",
+          "input_schema": {
+            "properties": {
+              "Material": { "type": "string" }, "MRPPlant": { "type": "string" },
+              "$top": { "type": "string" }
+            },
+            "required": ["Material", "MRPPlant"]
+          },
+          "mock_response": {
+            "value": [
+              { "MRPElementCategory": "OrdRes", "MRPElement": "1000001", "MRPElementSupplyDemandQuantity": -200.0, "MRPElementOpenQuantityDate": "2026-07-01" },
+              { "MRPElementCategory": "PurOrd", "MRPElement": "4500001", "MRPElementSupplyDemandQuantity": 300.0, "MRPElementOpenQuantityDate": "2026-07-10" }
+            ]
+          }
+        },
+        "API_MRP_MATERIALS_SRV_01__A_MRPMaterial_Read": {
+          "description": "Read MRP material parameters.",
+          "input_schema": {
+            "properties": { "Material": { "type": "string" }, "MRPPlant": { "type": "string" } },
+            "required": ["Material", "MRPPlant"]
+          },
+          "mock_response": {
+            "value": [{ "Material": "FG-001", "MRPPlant": "1010", "SafetyStock": 50.0, "ReorderPoint": 100.0 }]
+          }
+        }
+      }
+    },
+    "CE_APIAVAILTOPROMISECHECK_0001": {
+      "tools": {
+        "CE_APIAVAILTOPROMISECHECK_0001__CheckAvailabilityWithoutResvn": {
+          "description": "Check ATP availability without reservation.",
+          "input_schema": {
+            "properties": {
+              "Material": { "type": "string" }, "Plant": { "type": "string" },
+              "RequestedQuantity": { "type": "string" }, "RequestedDeliveryDate": { "type": "string" }
+            },
+            "required": ["Material", "Plant", "RequestedQuantity", "RequestedDeliveryDate"]
+          },
+          "mock_response": {
+            "Material": "FG-001", "Plant": "1010",
+            "ConfirmedQuantity": 300.0, "AvailabilityDate": "2026-07-15",
+            "ReasonCode": "", "ReasonText": "Fully confirmed"
+          }
+        }
+      }
+    },
+    "API_PLANNED_ORDERS": {
+      "tools": {
+        "API_PLANNED_ORDERS__A_PlannedOrder_Read": {
+          "description": "Read planned orders for a material and plant.",
+          "input_schema": {
+            "properties": {
+              "Material": { "type": "string" }, "ProductionPlant": { "type": "string" },
+              "$top": { "type": "string" }
+            },
+            "required": ["Material", "ProductionPlant"]
+          },
+          "mock_response": {
+            "value": [{
+              "PlannedOrder": "0000100001", "PlannedOrderType": "ZP01",
+              "PlannedOrderPlannedQuantity": 500.0,
+              "PlannedOrderOpeningDate": "2026-07-01", "PlannedOrderEndDate": "2026-07-10", "MRPType": "X"
+            }]
+          }
+        },
+        "API_PLANNED_ORDERS__PlannedOrderSchedule": {
+          "description": "Convert a planned order to a production order.",
+          "input_schema": {
+            "properties": { "PlannedOrder": { "type": "string" }, "OrderType": { "type": "string" } },
+            "required": ["PlannedOrder"]
+          },
+          "mock_response": { "PlannedOrder": "0000100001", "ProductionOrder": "PRD0000100001", "Status": "CONVERTED" }
+        }
+      }
+    },
+    "API_PLND_INDEP_RQMT_SRV": {
+      "tools": {
+        "API_PLND_INDEP_RQMT_SRV__PlannedIndepRqmtItem_Update": {
+          "description": "Update a planned independent requirement quantity.",
+          "input_schema": {
+            "properties": {
+              "Material": { "type": "string" }, "Plant": { "type": "string" },
+              "Version": { "type": "string" }, "RequirementDate": { "type": "string" },
+              "PlannedIndepRqmtInBaseUnit": { "type": "string" }
+            },
+            "required": ["Material", "Plant", "Version", "RequirementDate", "PlannedIndepRqmtInBaseUnit"]
+          },
+          "mock_response": { "PlannedIndepRqmt": "PIR1000001", "OldQuantity": 200.0, "NewQuantity": 150.0 }
+        }
+      }
+    }
+  }
+}
