@@ -1,0 +1,23 @@
+---
+# CF manifest for inventory-atp-agent.
+# Subaccount: GDH-PRJ-Vector-Hackathon-APAC-Dev1
+# Org: GDH-PRJ-Vector-Hackathon_gdh-prj-vector-hackathon-apac-dev1-5ms3qdnd | Space: Dev
+# API: https://api.cf.us10.hana.ondemand.com
+# Default route assigned automatically as:
+#   inventory-atp-agent.cfapps.us10.hana.ondemand.com
+applications:
+  - name: inventory-atp-agent
+    memory: 512M
+    disk_quota: 1G
+    instances: 1
+    buildpacks:
+      - python_buildpack
+    command: gunicorn --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:${PORT} --chdir app main:application
+    timeout: 180
+    health-check-type: http
+    health-check-http-endpoint: /.well-known/agent.json
+    services:
+      - proj-vector-destination-service
+    env:
+      AICORE_DESTINATION_NAME: aicore
+      LOG_LEVEL: INFO
