@@ -1,0 +1,67 @@
+{
+  "name": "material-stock-dashboard-cap",
+  "version": "1.7.0",
+  "dependencies": {
+    "@cap-js/sqlite": "^2.4",
+    "@sap/cds": "^9",
+    "@sap/xssec": "^3",
+    "passport": "^0.7.0"
+  },
+  "devDependencies": {
+    "@cap-js/cds-test": "^1.0.1",
+    "@sap/cds-dk": "^9.9.2",
+    "jest": "^30.4.2"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "build": "cds build --production && node scripts/fix-gen-srv.js",
+    "build:ui": "npm run build --workspace=app/react-ui",
+    "build:all": "npm run build:ui && npm run build",
+    "test": "jest --testEnvironment node --forceExit --coverage"
+  },
+  "private": true,
+  "cds": {
+    "server": {
+      "livereload": false
+    },
+    "requires": {
+      "API_MATERIAL_STOCK_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_MATERIAL_STOCK_SRV",
+        "credentials": {
+          "destination": "S4HANA_MATERIAL_STOCK"
+        }
+      }
+    },
+    "[development]": {
+      "requires": {
+        "auth": "dummy"
+      }
+    },
+    "[production]": {
+      "folders": {
+        "app": "app/react-ui/dist"
+      },
+      "requires": {
+        "db": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": "/app/db.sqlite"
+          }
+        },
+        "auth": {
+          "kind": "xsuaa"
+        }
+      }
+    }
+  },
+  "jest": {
+    "reporters": [
+      "default",
+      "<rootDir>/scripts/test-report-reporter.cjs"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
