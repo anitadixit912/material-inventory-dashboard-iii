@@ -1,0 +1,294 @@
+{
+  "namespace": "material.stock",
+  "definitions": {
+    "material.stock.StockThresholdConfig": {
+      "kind": "entity",
+      "elements": {
+        "id": {
+          "key": true,
+          "type": "cds.Integer",
+          "default": {
+            "val": 1
+          }
+        },
+        "safetyStockPct": {
+          "type": "cds.Decimal",
+          "precision": 5,
+          "scale": 2,
+          "default": {
+            "val": 20
+          }
+        }
+      }
+    },
+    "StockService": {
+      "@source": "srv/stock-service.cds",
+      "kind": "service",
+      "@requires": "authenticated-user",
+      "@path": "/stock"
+    },
+    "StockService.MaterialStockView": {
+      "kind": "entity",
+      "@readonly": true,
+      "elements": {
+        "Material": {
+          "key": true,
+          "type": "cds.String",
+          "length": 40
+        },
+        "Plant": {
+          "key": true,
+          "type": "cds.String",
+          "length": 4
+        },
+        "StorageLocation": {
+          "key": true,
+          "type": "cds.String",
+          "length": 4
+        },
+        "MaterialDescription": {
+          "type": "cds.String",
+          "length": 100
+        },
+        "StockQuantity": {
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "BaseUnit": {
+          "type": "cds.String",
+          "length": 3
+        },
+        "ReorderPoint": {
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "SafetyStock": {
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "StockStatus": {
+          "type": "cds.String",
+          "length": 30
+        },
+        "RiskReason": {
+          "type": "cds.String",
+          "length": 60
+        },
+        "RiskDescription": {
+          "type": "cds.String",
+          "length": 500
+        }
+      }
+    },
+    "StockService.StockThresholdConfig": {
+      "kind": "entity",
+      "@readonly": true,
+      "projection": {
+        "from": {
+          "ref": [
+            "material.stock.StockThresholdConfig"
+          ]
+        }
+      },
+      "elements": {
+        "id": {
+          "key": true,
+          "type": "cds.Integer",
+          "default": {
+            "val": 1
+          }
+        },
+        "safetyStockPct": {
+          "type": "cds.Decimal",
+          "precision": 5,
+          "scale": 2,
+          "default": {
+            "val": 20
+          }
+        }
+      }
+    },
+    "StockService.updateThreshold": {
+      "kind": "action",
+      "params": {
+        "safetyStockPct": {
+          "type": "cds.Decimal",
+          "precision": 5,
+          "scale": 2,
+          "notNull": true
+        }
+      },
+      "returns": {
+        "type": "cds.Decimal",
+        "precision": 5,
+        "scale": 2
+      }
+    },
+    "StockService.chat": {
+      "kind": "action",
+      "params": {
+        "message": {
+          "type": "cds.String",
+          "length": 1000,
+          "notNull": true
+        },
+        "contextId": {
+          "type": "cds.String",
+          "length": 100
+        }
+      },
+      "returns": {
+        "type": "cds.String"
+      }
+    },
+    "cds.outbox.Messages": {
+      "kind": "entity",
+      "elements": {
+        "ID": {
+          "key": true,
+          "type": "cds.UUID"
+        },
+        "timestamp": {
+          "type": "cds.Timestamp"
+        },
+        "target": {
+          "type": "cds.String"
+        },
+        "msg": {
+          "type": "cds.LargeString"
+        },
+        "attempts": {
+          "type": "cds.Integer",
+          "default": {
+            "val": 0
+          }
+        },
+        "partition": {
+          "type": "cds.Integer",
+          "default": {
+            "val": 0
+          }
+        },
+        "lastError": {
+          "type": "cds.LargeString"
+        },
+        "lastAttemptTimestamp": {
+          "type": "cds.Timestamp"
+        },
+        "status": {
+          "type": "cds.String",
+          "length": 23
+        },
+        "task": {
+          "type": "cds.String",
+          "length": 255
+        },
+        "appid": {
+          "type": "cds.String",
+          "length": 255
+        }
+      }
+    },
+    "API_MATERIAL_STOCK_SRV.A_MaterialStockType": {
+      "kind": "entity",
+      "@cds.external": true,
+      "@cds.persistence.skip": true,
+      "elements": {
+        "Material": {
+          "key": true,
+          "type": "cds.String",
+          "length": 40
+        },
+        "MaterialBaseUnit": {
+          "type": "cds.String",
+          "length": 3
+        }
+      }
+    },
+    "API_MATERIAL_STOCK_SRV.A_MatlStkInAcctModType": {
+      "kind": "entity",
+      "@cds.external": true,
+      "@cds.persistence.skip": true,
+      "elements": {
+        "Material": {
+          "key": true,
+          "type": "cds.String",
+          "length": 40
+        },
+        "Plant": {
+          "key": true,
+          "type": "cds.String",
+          "length": 4
+        },
+        "StorageLocation": {
+          "key": true,
+          "type": "cds.String",
+          "length": 4
+        },
+        "Batch": {
+          "key": true,
+          "type": "cds.String",
+          "length": 10
+        },
+        "Supplier": {
+          "key": true,
+          "type": "cds.String",
+          "length": 10
+        },
+        "Customer": {
+          "key": true,
+          "type": "cds.String",
+          "length": 10
+        },
+        "WBSElementInternalID": {
+          "key": true,
+          "type": "cds.String",
+          "length": 24
+        },
+        "SDDocument": {
+          "key": true,
+          "type": "cds.String",
+          "length": 10
+        },
+        "SDDocumentItem": {
+          "key": true,
+          "type": "cds.String",
+          "length": 6
+        },
+        "InventorySpecialStockType": {
+          "key": true,
+          "type": "cds.String",
+          "length": 1
+        },
+        "InventoryStockType": {
+          "key": true,
+          "type": "cds.String",
+          "length": 2
+        },
+        "WBSElementExternalID": {
+          "type": "cds.String",
+          "length": 24
+        },
+        "MaterialBaseUnit": {
+          "type": "cds.String",
+          "length": 3
+        },
+        "MatlWrhsStkQtyInMatlBaseUnit": {
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        }
+      }
+    }
+  },
+  "meta": {
+    "creator": "CDS Compiler v6.9.2",
+    "compilerVersion": "6.9.2",
+    "compilerCsnFlavor": "inferred",
+    "flavor": "inferred"
+  },
+  "$version": "2.0"
+}
