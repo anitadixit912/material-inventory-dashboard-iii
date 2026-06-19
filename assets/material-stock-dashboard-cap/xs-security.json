@@ -1,0 +1,30 @@
+{
+  "xsappname": "material-stock-dashboard",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.StockViewer",
+      "description": "View material stock levels and advisor recommendations"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "StockViewer",
+      "description": "Can view material stock levels",
+      "scope-references": [
+        "$XSAPPNAME.StockViewer"
+      ],
+      "attribute-references": []
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "MaterialStockDashboard_Viewer",
+      "description": "Access to Material Stock Dashboard",
+      "role-template-references": [
+        "$XSAPPNAME.StockViewer"
+      ]
+    }
+  ]
+}
